@@ -1,10 +1,8 @@
-name: RunIn_DB
-channels:
-  - defaults/win-32
+name: vss_dataset
 dependencies:
   - python=3.10
   - tqdm>=4.64.0
   - h5py>=3.6.0
   - numpy>=1.21.5
   - pandas>=2.0.0
-prefix: C:\ProgramData\anaconda3\envs\RunIn_DB
+prefix: C:\ProgramData\anaconda3\envs\vss_dataset
