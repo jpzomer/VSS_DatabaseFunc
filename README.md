@@ -1,2 +1,2 @@
-# RunningIn_DatabaseFunc
-Functions related to the running-in dataset
+# VSS_DatabaseFunc
+Functions related to the vibration-based soft-sensing dataset
