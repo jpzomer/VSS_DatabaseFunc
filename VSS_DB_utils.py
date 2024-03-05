@@ -1,5 +1,6 @@
 import h5py
 import pandas as pd
+import numpy as np
 
 class VSS_File:
     # Class for vibration-based soft sensing database in an hdf5 file
@@ -7,15 +8,11 @@ class VSS_File:
         self.path = filePath
         self._index = 0
         self._fileh5ref = h5py.File(filePath,'r')
-        # self._modelh5ref = [self._fileh5ref[key] for key in self._fileh5ref.keys()][0]
         self.units =  [self.VSS_Unit_Reference(self,self._fileh5ref[group]) for group in self._fileh5ref.keys()]
 
-    # def __repr__(self):
-    #     return f"Vibration-based database <{self.model}> ({len(self.units)} units)"
-    
-    # def __str__(self):
-    #     return self.model
-    
+    def __repr__(self):
+        return f"Vibration-based database for ({len(self.units)} units)"
+           
     def __iter__(self):
         return self
     
@@ -26,6 +23,24 @@ class VSS_File:
         else:
             self._index += 1
             return self.units[self._index-1]
+        
+    # adaptar pra escolher apenas alguns compressores
+    def DataframeAsList(self, attributeDict, selectedUnits = None):
+        if selectedUnits is None:
+            selectedUnits = self.units
+        else:
+            selectedUnits = [self.VSS_Unit_Reference(self,self._fileh5ref[group]) for group in selectedUnits]
+
+        return [item for sublist in \
+                [unit.filterTestsByAttributeDict(attributeDict) for unit in selectedUnits] \
+                      for item in sublist]
+    
+
+    # def returnDataframe(self, attributeDict):
+    #     dataList = self.DataframeAsList(attributeDict)
+    #     df = pd.DataFrame(np.mean(np.array(dataset.DataframeAsList(attributeDict)[0]._h5ref["numericalMeasurements"]), axis=0))
+    #     return df
+
 
     class VSS_Unit_Reference:
         # Class for a unit group inside a hdf5 file
@@ -37,7 +52,7 @@ class VSS_File:
             self.tests = [self.VSS_Test_Reference(self,self._h5ref[group]) for group in self._h5ref.keys()]
 
         def __repr__(self):
-            return f"Run-in unit database <{self.name}> ({len(self.tests)} tests)"
+            return f"Vibration-based database for unit <{self.name}> ({len(self.tests)} tests)"
     
         def __str__(self):
             return self.name
@@ -52,6 +67,60 @@ class VSS_File:
             else:
                 self._index += 1
                 return self.tests[self._index-1]
+            
+        # def filterTestsByAttribute(self, attribute, value):
+        #     match attribute:
+        #         case "angularSpeed":
+        #             # 2100 2475 2850 3225 3600 RPM
+        #             return [test for test in self.tests if test._h5ref.attrs['angularSpeed'] in value]
+        #         case "condensingTemperature" | "evaporatingTemperature":
+        #             # condensingTemperature 34º C até 54 ºC
+        #             # evaporatingTemperature 10º C até 30 ºC
+        #             return [test for test in self.tests if min(value) <= test._h5ref.attrs[attribute] <= max(value)]
+        #         # case "repetition":
+        #         #     #  n
+        #         #     pass
+        #         case "type":
+        #             # A = mapa principal
+        #             # B = mapa secundário
+        #             return [test for test in self.tests if test._h5ref.attrs['type'] == value]
+                
+        def filterTestsByAttributeDict(self, attributeDict):
+                output = [test for test in self.tests]
+                if "angularSpeed" in attributeDict.keys():
+                    output = [test for test in output if int(test._h5ref.attrs['angularSpeed']) \
+                               in attributeDict['angularSpeed']]
+                else:
+                    pass
+
+                if "condensingTemperature" in attributeDict.keys():
+                    output = [test for test in output if \
+                             min(attributeDict['condensingTemperature']) \
+                                <= float(test._h5ref.attrs['condensingTemperature'].replace(',','.')) \
+                                    <= max(attributeDict['condensingTemperature'])]
+                else:
+                    pass
+
+                if "evaporatingTemperature" in attributeDict.keys():
+                    output = [test for test in output if \
+                             min(attributeDict['evaporatingTemperature']) \
+                                <= float(test._h5ref.attrs['evaporatingTemperature'].replace(',','.')) \
+                                    <= max(attributeDict['evaporatingTemperature'])]
+                else:
+                    pass
+
+                if "repetition" in attributeDict.keys():
+                    pass
+                else:
+                    pass
+
+                if "type" in attributeDict.keys():
+                    pass
+                else:
+                    pass
+
+                return output
+
 
         class VSS_Test_Reference:
             # Class for a test group inside a hdf5 file
@@ -61,81 +130,42 @@ class VSS_File:
                 self.h5unit = parent
                 self.date = testGroupId.name
                 self.unit = parent.name
+                self.name = testGroupId.name
 
             def __repr__(self):
-                return f"Run-in test database <{self.name}>"
+                return f"Vibration soft sensing test database <{self.name}>"
     
             def __str__(self):
-                return (self.unit + "/" + self.date)
+                return (self.name)
+            
+            def returnNumericalDatabase(self):
+                return np.array(self._h5ref["numericalMeasurements"])
+            
+            def returnNumericalHeaders(self):
+                return list(self._h5ref["numericalMeasurements"].attrs["columnNames"])
+            
+            def returnNumericalDataframe(self):
+                return pd.DataFrame(data = self.returnNumericalDatabase(), columns = self.returnNumericalHeaders())
+            
+            def returnVibrationDatabase(self):
+                return np.array(self._h5ref["vibrationMeasurements"])
+            
+            def returnVibrationHeaders(self):
+                return list(self._h5ref["vibrationMeasurements"].attrs["columnNames"])
+            
+            def returnVibrationDataframe(self):
+                return pd.DataFrame(data = self.returnVibrationDatabase(), columns = self.returnVibrationHeaders())
+            
+            def returnAttributeList(self):
+                return list(dataset.units[0].tests[0]._h5ref.attrs)
+            
+            def splitVibrationWaveform(self, n, axis):
+                vibData = np.array(self.returnVibrationDataframe()[axis])
 
-            def getMeasurementsDataframe(self, varName: list[str], tStart:float = None, tEnd:float = None, indexes: list[int] = None):
-                # Returns a dataframe containing the measurements of the desired indexes or time range
-
-                if (indexes is not None) and ((tEnd is not None) or (tStart is not None)):
-                    raise Exception("Both index and time range provided. Only one allowed.")
-                
-                allVars = self.getVarNames()
-
-                # Check vars
-                for var in varName:
-                    if var not in allVars:
-                        raise Exception("One or more variables are not available for the selected test. Run getVarNames() to list all available variables.")  
-
-                
-                if indexes is not None: # Get by index
-                    df = pd.DataFrame(index = indexes,columns = ["time"] + varName)
-
-                    for ind in indexes:
-                        df.at[ind, "time"] = self._h5ref[str(ind)].attrs["time"]
-
-                        for var in varName:
-                            if var in ["voltageRAW","acousticEmissionRAW", "currentRAW",
-                                    "vibrationRAWLongitudinal", "vibrationRAWRig", "vibrationRAWLateral"]:
-                                # Get values from high frequency dataset
-                                df.at[ind, var] = self._h5ref[str(ind)][var][()]
-                            else:
-                                df.at[ind, var] = self._h5ref[str(ind)].attrs[var]
-                    
-                    return df
-                
-                else: # Get by time
-                    if tStart > tEnd:
-                        raise Exception("Starting time should be smaller than end time.")
-
-                    allTests = list(self._h5ref.keys())
-                    df = pd.DataFrame(columns = ["time"] + varName)
-
-                    count = 0
-                    t_act = self._h5ref["0"].attrs["time"]
-
-                    while t_act <= tEnd:
-
-                        if t_act > tStart:
-                            df.loc[len(df)] = pd.Series(dtype='float64') # Initializes new row
-                            df.index[len(df)-1] = count
-                            df.at[count, "time"] = t_act
-
-                            for var in varName:
-                                if var in ["voltageRAW","acousticEmissionRAW", "currentRAW",
-                                        "vibrationRAWLongitudinal", "vibrationRAWRig", "vibrationRAWLateral"]:
-                                    # Get values from high frequency dataset
-                                    df.at[count, var] = self._h5ref[str(count)][var][()]
-                                else:
-                                    df.at[count, var] = self._h5ref[str(count)].attrs[var]
-
-                        count = count + 1
-
-                        if str(count) not in allTests: # All measurements have been checked
-                            break
-                        else:
-                            t_act = self._h5ref[str(count)].attrs["time"]
-
-
-            def getVarNames(self):
-                # Return the name of all measurement variables of a given test
-
-                # List of all available variables based on the 1st measurement of the test
-                return list(self._h5ref["0"].attrs.keys())+list(self._h5ref["0"].keys())
+                if np.size(vibData) % n:
+                    return np.split(vibData[0:-(np.size(vibData)%n)],n)
+                else:
+                    return np.split(vibData,n)
         
 #if __name__ == "__main__":
 #
