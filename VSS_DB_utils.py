@@ -157,7 +157,7 @@ class VSS_File:
                 return pd.DataFrame(data = self.returnVibrationDatabase(), columns = self.returnVibrationHeaders())
             
             def returnAttributeList(self):
-                return list(dataset.units[0].tests[0]._h5ref.attrs)
+                return list(self.units[0].tests[0]._h5ref.attrs)
             
             def splitVibrationWaveform(self, n, axis):
                 vibData = np.array(self.returnVibrationDataframe()[axis])
