@@ -118,7 +118,10 @@ class VSS_File:
                     pass
                 else:
                     pass
-
+                
+                #adição de "compressor"
+                if "compressor" in attributeDict.keys():
+                    output = [test for test in output if int(str(test.name)[1]) in attributeDict['compressor']]
                 return output
 
 
@@ -157,8 +160,14 @@ class VSS_File:
                 return pd.DataFrame(data = self.returnVibrationDatabase(), columns = self.returnVibrationHeaders())
             
             def returnAttributeList(self):
-                return list(self.units[0].tests[0]._h5ref.attrs)
+                return list(self._h5ref.attrs)
             
+            def returnAttributeDict(self):
+                AttributeList = self.returnAttributeList()
+                AttributeDict = {}
+                for element in AttributeList:
+                    AttributeDict[element] = self._h5ref.attrs[element]
+                return AttributeDict
             def splitVibrationWaveform(self, n, axis):
                 vibData = np.array(self.returnVibrationDataframe()[axis])
 
