@@ -24,6 +24,14 @@ class VSS_File:
             self._index += 1
             return self.units[self._index-1]
         
+    def close(self):
+        """Close the HDF5 file."""
+        self._fileh5ref.close()
+
+    def __del__(self):
+        """Destructor to ensure the file is closed when the object is deleted."""
+        self.close()
+        
     # adaptar pra escolher apenas alguns compressores
     def DataframeAsList(self, attributeDict, selectedUnits = None):
         if selectedUnits is None:
@@ -31,10 +39,13 @@ class VSS_File:
         else:
             selectedUnits = [self.VSS_Unit_Reference(self,self._fileh5ref[group]) for group in selectedUnits]
 
-        return [item for sublist in \
-                [unit.filterTestsByAttributeDict(attributeDict) for unit in selectedUnits] \
-                      for item in sublist]
+        # return [item for sublist in \
+        #         [unit.filterTestsByAttributeDict(attributeDict) for unit in selectedUnits] \
+        #               for item in sublist]
     
+        # chatgpt
+        return [item for unit in selectedUnits for item in unit.filterTestsByAttributeDict(attributeDict)]
+
 
     # def returnDataframe(self, attributeDict):
     #     dataList = self.DataframeAsList(attributeDict)
@@ -175,6 +186,25 @@ class VSS_File:
                     return np.split(vibData[0:-(np.size(vibData)%n)],n)
                 else:
                     return np.split(vibData,n)
+                
+            def splitVibrationWaveforms(self, n, axes):
+                # Ensure axes are valid
+                for axis in axes:
+                    if axis not in self.returnVibrationHeaders():
+                        raise ValueError(f"Invalid axis: {axis}")
+
+                vibDataList = [self.returnVibrationDataframe()[axis].to_numpy() for axis in axes]
+                results = {}
+
+                for i, vibData in enumerate(vibDataList):
+                    size = vibData.size
+                    if size % n:
+                        vibData = vibData[0:-(size % n)]  # Trim the data
+
+                    results[axes[i]] = vibData.reshape(n, -1)
+
+                return results
+
         
 #if __name__ == "__main__":
 #
