@@ -1,6 +1,15 @@
 import h5py
 import pandas as pd
 import numpy as np
+from contextlib import contextmanager
+
+@contextmanager
+def open_hdf5_file(filePath):
+    file = h5py.File(filePath, 'r')
+    try:
+        yield file
+    finally:
+        file.close()
 
 class VSS_File:
     # Class for vibration-based soft sensing database in an hdf5 file
@@ -9,6 +18,7 @@ class VSS_File:
         self._index = 0
         self._fileh5ref = h5py.File(filePath,'r')
         self.units =  [self.VSS_Unit_Reference(self,self._fileh5ref[group]) for group in self._fileh5ref.keys()]
+
 
     def __repr__(self):
         return f"Vibration-based database for ({len(self.units)} units)"
@@ -24,13 +34,13 @@ class VSS_File:
             self._index += 1
             return self.units[self._index-1]
         
-    def close(self):
-        """Close the HDF5 file."""
-        self._fileh5ref.close()
+    # def close(self):
+    #     """Close the HDF5 file."""
+    #     self._fileh5ref.close()
 
-    def __del__(self):
-        """Destructor to ensure the file is closed when the object is deleted."""
-        self.close()
+    # def __del__(self):
+    #     """Destructor to ensure the file is closed when the object is deleted."""
+    #     self.close()
         
     # adaptar pra escolher apenas alguns compressores
     def DataframeAsList(self, attributeDict, selectedUnits = None):
