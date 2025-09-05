@@ -20,17 +20,11 @@ def create_filter_dict(angularSpeed, compressor):
 def get_total_memory(df):
     return df.memory_usage(index=True, deep=True).sum()/(1024**3)
 
-def reshape_image(row):
-    return row.reshape(117, 103, 1)
+# def amplitude_to_db(amostra_fft,db_ref = 5*(10**-8)):
+#     return 20*np.log10(amostra_fft/db_ref)
 
-def min_max_image(df, max=150, min=50):
-    return (df-min)/(max-min)
+# def df_max(df):
+#     return max([df[col].apply(np.max).max() for col in ['x','y','z']])
 
-def amplitude_to_db(amostra_fft,db_ref = 5*(10**-8)):
-    return 20*np.log10(amostra_fft/db_ref)
-
-def df_max(df):
-    return max([df[col].apply(np.max).max() for col in ['x','y','z']])
-
-def df_min(df):
-    return min([df[col].apply(np.min).min() for col in ['x','y','z']])
+# def df_min(df):
+#     return min([df[col].apply(np.min).min() for col in ['x','y','z']])
