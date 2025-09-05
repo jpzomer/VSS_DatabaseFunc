@@ -1,0 +1,36 @@
+{
+    "treino": {
+        "angularSpeed": [2100, 2850, 3600],
+        "compressor": [1, 2, 3, 4]
+    },
+    "teste1": {
+        "angularSpeed": [2100, 2850, 3600],
+        "compressor": [5]
+    },
+    "teste2": {
+        "angularSpeed": [2475, 3225],
+        "compressor": [1, 2, 3, 4]
+    },
+    "teste3": {
+        "angularSpeed": [2475, 3225],
+        "compressor": [5]
+    },
+    "low": {
+        "angularSpeed": [2100, 3600],
+        "condensingTemperature": [44],
+        "evaporatingTemperature": [20],
+        "compressor": [1]
+    },
+    "all_comp": {
+        "angularSpeed": [2100, 3600],
+        "condensingTemperature": [44],
+        "evaporatingTemperature": [20],
+        "compressor": [1, 2, 3, 4, 5]
+    },
+    "treino_ahry":{
+        "compressor": [1, 2, 3, 4]
+    },
+    "teste_ahry":{
+        "compressor": [5]
+    }
+}

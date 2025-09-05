@@ -1,0 +1,16 @@
+{
+    "config_IJR": {
+        "num_slices": 10,
+        "dur": 200,
+        "sup": 0.1
+    },
+    "mais_bandas": {
+        "num_slices": 10,
+        "dur": 20,
+        "sup": 0.1
+    },
+    "no_configs": {
+        "num_slices": 10,
+        "save_interval": 100
+    }
+}
